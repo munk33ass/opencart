@@ -1,24 +1,33 @@
 <?php
 class Event {
-	private $data = array();
+	protected $registry;
+	public $data = array();
+	protected $current;
 
 	public function __construct($registry) {
 		$this->registry = $registry;
 	}
 
-	public function register($key, $action) {
-		$this->data[$key][] = $action;
+	public function register($trigger, $action) {
+		$this->data[$trigger][] = $action;
+	}
+	
+	public function unregister($trigger, $action) {
+		if (isset($this->data[$trigger])) {
+			unset($this->data[$trigger]);
+		}
 	}
 
-	public function unregister($key, $action) {
-		unset($this->data[$key]);
-	}
-
-	public function trigger($key, &$arg = array()) {
-		if (isset($this->data[$key])) {
-			foreach ($this->data[$key] as $event) {
-				$action = new Action($event, $arg);
-				$action->execute($this->registry);
+	public function trigger($trigger, $args = array()) {
+		foreach ($this->data as $key => $value) {
+			if (preg_match('/^' . str_replace(array('\*', '\?'), array('.*', '.'), preg_quote($key, '/')) . '/', $trigger)) {
+				foreach ($value as $event) {
+					$result = $event->execute($this->registry, $args);
+				
+					if (!$result instanceof Exception) {
+						return $result;
+					}
+				}
 			}
 		}
 	}

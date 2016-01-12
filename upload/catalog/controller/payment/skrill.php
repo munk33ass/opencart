@@ -14,7 +14,7 @@ class ControllerPaymentSkrill extends Controller {
 		$data['description'] = $this->config->get('config_name');
 		$data['transaction_id'] = $this->session->data['order_id'];
 		$data['return_url'] = $this->url->link('checkout/success');
-		$data['cancel_url'] = $this->url->link('checkout/checkout', '', 'SSL');
+		$data['cancel_url'] = $this->url->link('checkout/checkout', '', true);
 		$data['status_url'] = $this->url->link('payment/skrill/callback');
 		$data['language'] = $this->session->data['language'];
 		$data['logo'] = $this->config->get('config_url') . 'image/' . $this->config->get('config_logo');
@@ -44,11 +44,7 @@ class ControllerPaymentSkrill extends Controller {
 
 		$data['order_id'] = $this->session->data['order_id'];
 
-		if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/payment/skrill.tpl')) {
-			return $this->load->view($this->config->get('config_template') . '/template/payment/skrill.tpl', $data);
-		} else {
-			return $this->load->view('default/template/payment/skrill.tpl', $data);
-		}
+		return $this->load->view('payment/skrill', $data);
 	}
 
 	public function callback() {
@@ -79,7 +75,7 @@ class ControllerPaymentSkrill extends Controller {
 				$md5hash = strtoupper(md5($hash));
 				$md5sig = $this->request->post['md5sig'];
 
-				if ($md5hash != $md5sig) {
+				if (($md5hash != $md5sig) || (strtolower($this->request->post['pay_to_email']) != strtolower($this->config->get('config_moneybookers_email'))) || ((float)$this->request->post['amount'] != $this->currency->format((float)$order_info['total'], $order_info['currency_code'], $order_info['currency_value'], false))) {
 					$verified = false;
 				}
 			}

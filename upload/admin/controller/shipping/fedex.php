@@ -14,11 +14,11 @@ class ControllerShippingFedex extends Controller {
 
 			$this->session->data['success'] = $this->language->get('text_success');
 
-			$this->response->redirect($this->url->link('extension/shipping', 'token=' . $this->session->data['token'], 'SSL'));
+			$this->response->redirect($this->url->ssl('extension/shipping', 'token=' . $this->session->data['token'], true));
 		}
 
 		$data['heading_title'] = $this->language->get('heading_title');
-		
+
 		$data['text_edit'] = $this->language->get('text_edit');
 		$data['text_enabled'] = $this->language->get('text_enabled');
 		$data['text_disabled'] = $this->language->get('text_disabled');
@@ -111,39 +111,39 @@ class ControllerShippingFedex extends Controller {
 		} else {
 			$data['error_postcode'] = '';
 		}
-		
+
 		if (isset($this->error['postcode'])) {
 			$data['error_postcode'] = $this->error['postcode'];
 		} else {
 			$data['error_postcode'] = '';
 		}
-		
+
 		if (isset($this->error['dimension'])) {
 			$data['error_dimension'] = $this->error['dimension'];
 		} else {
 			$data['error_dimension'] = '';
 		}
-		
+
 		$data['breadcrumbs'] = array();
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('common/dashboard', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_shipping'),
-			'href' => $this->url->link('extension/shipping', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('extension/shipping', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('shipping/fedex', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('shipping/fedex', 'token=' . $this->session->data['token'], true)
 		);
 
-		$data['action'] = $this->url->link('shipping/fedex', 'token=' . $this->session->data['token'], 'SSL');
+		$data['action'] = $this->url->ssl('shipping/fedex', 'token=' . $this->session->data['token'], true);
 
-		$data['cancel'] = $this->url->link('extension/shipping', 'token=' . $this->session->data['token'], 'SSL');
+		$data['cancel'] = $this->url->ssl('extension/shipping', 'token=' . $this->session->data['token'], true);
 
 		if (isset($this->request->post['fedex_key'])) {
 			$data['fedex_key'] = $this->request->post['fedex_key'];
@@ -295,26 +295,25 @@ class ControllerShippingFedex extends Controller {
 			'text'  => $this->language->get('text_standard_overnight'),
 			'value' => 'STANDARD_OVERNIGHT'
 		);
-		
-		
+
 		if (isset($this->request->post['fedex_length'])) {
 			$data['fedex_length'] = $this->request->post['fedex_length'];
 		} else {
 			$data['fedex_length'] = $this->config->get('fedex_length');
 		}
-		
+
 		if (isset($this->request->post['fedex_width'])) {
 			$data['fedex_width'] = $this->request->post['fedex_width'];
 		} else {
 			$data['fedex_width'] = $this->config->get('fedex_width');
 		}
-		
+
 		if (isset($this->request->post['fedex_height'])) {
 			$data['fedex_height'] = $this->request->post['fedex_height'];
 		} else {
 			$data['fedex_height'] = $this->config->get('fedex_height');
 		}
-		
+
 		if (isset($this->request->post['fedex_length_class_id'])) {
 			$data['fedex_length_class_id'] = $this->request->post['fedex_length_class_id'];
 		} else {
@@ -324,7 +323,7 @@ class ControllerShippingFedex extends Controller {
 		$this->load->model('localisation/length_class');
 
 		$data['length_classes'] = $this->model_localisation_length_class->getLengthClasses();
-		
+
 		if (isset($this->request->post['fedex_dropoff_type'])) {
 			$data['fedex_dropoff_type'] = $this->request->post['fedex_dropoff_type'];
 		} else {
@@ -407,7 +406,7 @@ class ControllerShippingFedex extends Controller {
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
-		$this->response->setOutput($this->load->view('shipping/fedex.tpl', $data));
+		$this->response->setOutput($this->load->view('shipping/fedex', $data));
 	}
 
 	protected function validate() {
@@ -434,10 +433,10 @@ class ControllerShippingFedex extends Controller {
 		if (!$this->request->post['fedex_postcode']) {
 			$this->error['postcode'] = $this->language->get('error_postcode');
 		}
-		
+
 		if (!$this->request->post['fedex_length'] || !$this->request->post['fedex_width'] || !$this->request->post['fedex_width']) {
 			$this->error['dimension'] = $this->language->get('error_dimension');
-		}		
+		}
 
 		return !$this->error;
 	}

@@ -5,7 +5,7 @@ class ControllerModulePPLogin extends Controller {
 	public function index() {
 		if (!$this->customer->isLogged()) {
 			$data['client_id'] = $this->config->get('pp_login_client_id');
-			$data['return_url'] = $this->url->link('module/pp_login/login', '', 'SSL');
+			$data['return_url'] = $this->url->link('module/pp_login/login', '', true);
 
 			if ($this->config->get('pp_login_sandbox')) {
 				$data['sandbox'] = 'sandbox';
@@ -48,11 +48,7 @@ class ControllerModulePPLogin extends Controller {
 
 			$data['scopes'] = implode(' ', $scopes);
 
-			if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/module/pp_login.tpl')) {
-				return $this->load->view($this->config->get('config_template') . '/template/module/pp_login.tpl', $data);
-			} else {
-				return $this->load->view('default/template/module/pp_login.tpl', $data);
-			}
+			return $this->load->view('module/pp_login', $data);
 		}
 	}
 
@@ -62,7 +58,7 @@ class ControllerModulePPLogin extends Controller {
 		$this->load->model('account/customer_group');
 
 		if ($this->customer->isLogged()) {
-			echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/account', '', 'SSL') . '"; window.close();</script>';
+			echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/account', '', true) . '"; window.close();</script>';
 		}
 
 		if (!isset($this->request->get['code'])) {
@@ -70,7 +66,7 @@ class ControllerModulePPLogin extends Controller {
 				$this->model_module_pp_login->log('No code returned. Error: ' . $this->request->get['error'] . ', Error Description: ' . $this->request->get['error_description']);
 			}
 
-			echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/login', '', 'SSL') . '"; window.close();</script>';
+			echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/login', '', true) . '"; window.close();</script>';
 		} else {
 			$tokens = $this->model_module_pp_login->getTokens($this->request->get['code']);
 		}
@@ -87,7 +83,7 @@ class ControllerModulePPLogin extends Controller {
 					$this->completeLogin($customer_info['customer_id'], $customer_info['email'], $tokens->access_token);
 				} else {
 					$this->model_module_pp_login->log('Could not login to - ID: ' . $customer_info['customer_id'] . ', Email: ' . $customer_info['email']);
-					echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/login', '', 'SSL') . '"; window.close();</script>';
+					echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/login', '', true) . '"; window.close();</script>';
 				}
 			} else {
 				$country = $this->db->query("SELECT `country_id` FROM `" . DB_PREFIX . "country` WHERE iso_code_2 = '" . $this->db->escape($user->address->country) . "'");
@@ -138,7 +134,7 @@ class ControllerModulePPLogin extends Controller {
 					$this->completeLogin($customer_id, $user->email, $tokens->access_token);
 				} else {
 					$this->model_module_pp_login->log('Could not login to - ID: ' . $customer_id . ', Email: ' . $user->email);
-					echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/login', '', 'SSL') . '"; window.close();</script>';
+					echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/login', '', true) . '"; window.close();</script>';
 				}
 			}
 		}
@@ -150,48 +146,48 @@ class ControllerModulePPLogin extends Controller {
 		}
 	}
 
-    protected function completeLogin($customer_id, $email, $access_token) {
-        unset($this->session->data['guest']);
+	protected function completeLogin($customer_id, $email, $access_token) {
+		unset($this->session->data['guest']);
 
-        // Default Shipping Address
-        $this->load->model('account/address');
+		// Default Shipping Address
+		$this->load->model('account/address');
 
-        if ($this->config->get('config_tax_customer') == 'payment') {
-            $this->session->data['payment_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());
-        }
+		if ($this->config->get('config_tax_customer') == 'payment') {
+			$this->session->data['payment_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());
+		}
 
-        if ($this->config->get('config_tax_customer') == 'shipping') {
-            $this->session->data['shipping_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());
-        }
+		if ($this->config->get('config_tax_customer') == 'shipping') {
+			$this->session->data['shipping_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());
+		}
 
-        // Add to activity log
-        $this->load->model('account/activity');
+		// Add to activity log
+		$this->load->model('account/activity');
 
-        $activity_data = array(
-            'customer_id' => $this->customer->getId(),
-            'name'        => $this->customer->getFirstName() . ' ' . $this->customer->getLastName()
-        );
+		$activity_data = array(
+			'customer_id' => $this->customer->getId(),
+			'name'        => $this->customer->getFirstName() . ' ' . $this->customer->getLastName()
+		);
 
-        $this->model_account_activity->addActivity('login', $activity_data);
+		$this->model_account_activity->addActivity('login', $activity_data);
 
-        if ($this->config->get('pp_login_seamless')) {
-            $this->session->data['pp_login']['seamless']['customer_id'] = $this->customer->getId();
-            $this->session->data['pp_login']['seamless']['access_token'] = $access_token;
-        } else {
-            if (isset($this->session->data['pp_login']['seamless'])) {
-                unset($this->session->data['pp_login']['seamless']);
-            }
-        }
+		if ($this->config->get('pp_login_seamless')) {
+			$this->session->data['pp_login']['seamless']['customer_id'] = $this->customer->getId();
+			$this->session->data['pp_login']['seamless']['access_token'] = $access_token;
+		} else {
+			if (isset($this->session->data['pp_login']['seamless'])) {
+				unset($this->session->data['pp_login']['seamless']);
+			}
+		}
 
-        $this->model_module_pp_login->log('Customer logged in - ID: ' . $customer_id . ', Email: ' . $email);
-        echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/account', '', 'SSL') . '"; window.close();</script>';
-    }
+		$this->model_module_pp_login->log('Customer logged in - ID: ' . $customer_id . ', Email: ' . $email);
+		echo '<script type="text/javascript">window.opener.location = "' . $this->url->link('account/account', '', true) . '"; window.close();</script>';
+	}
 
 	protected function validate($email) {
 		// Check how many login attempts have been made.
 		$login_info = $this->model_account_customer->getLoginAttempts($email);
 
-		if ($login_info && ($login_info['total'] > $this->config->get('config_login_attempts')) && strtotime('-1 hour') < strtotime($login_info['date_modified'])) {
+		if ($login_info && ($login_info['total'] >= $this->config->get('config_login_attempts')) && strtotime('-1 hour') < strtotime($login_info['date_modified'])) {
 			$this->error['warning'] = $this->language->get('error_attempts');
 		}
 

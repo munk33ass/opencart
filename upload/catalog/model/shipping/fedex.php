@@ -20,7 +20,15 @@ class ModelShippingFedex extends Model {
 		if ($status) {
 			$weight = $this->weight->convert($this->cart->getWeight(), $this->config->get('config_weight_class_id'), $this->config->get('fedex_weight_class_id'));
 			$weight_code = strtoupper($this->weight->getUnit($this->config->get('fedex_weight_class_id')));
-			
+
+			if ($weight_code == 'KGS') {
+				$weight_code = 'KG';
+			}
+
+			if ($weight_code == 'LBS') {
+				$weight_code = 'LB';
+			}
+
 			$date = time();
 
 			$day = date('l', $date);
@@ -155,7 +163,11 @@ class ModelShippingFedex extends Model {
 			$dom = new DOMDocument('1.0', 'UTF-8');
 			$dom->loadXml($response);
 
-			if ($dom->getElementsByTagName('HighestSeverity')->item(0)->nodeValue == 'FAILURE' || $dom->getElementsByTagName('HighestSeverity')->item(0)->nodeValue == 'ERROR') {
+			if ($dom->getElementsByTagName('faultcode')->length > 0) {
+    			$error = $dom->getElementsByTagName('cause')->item(0)->nodeValue;
+
+    			$this->log->write('FEDEX :: ' . $response);
+			} elseif ($dom->getElementsByTagName('HighestSeverity')->item(0)->nodeValue == 'FAILURE' || $dom->getElementsByTagName('HighestSeverity')->item(0)->nodeValue == 'ERROR') {
 				$error = $dom->getElementsByTagName('HighestSeverity')->item(0)->nodeValue;
 
 				$this->log->write('FEDEX :: ' . $response);
@@ -176,11 +188,11 @@ class ModelShippingFedex extends Model {
 
 						foreach ($rated_shipment_details as $rated_shipment_detail) {
 							$shipment_rate_detail = $rated_shipment_detail->getElementsByTagName('ShipmentRateDetail')->item(0);
-							$shipment_rate_detail_type = explode('_',$shipment_rate_detail->getElementsByTagName('RateType')->item(0)->nodeValue);
-							
+							$shipment_rate_detail_type = explode('_', $shipment_rate_detail->getElementsByTagName('RateType')->item(0)->nodeValue);
+
 							if (count($shipment_rate_detail_type) == 3 && $shipment_rate_detail_type[1] == $this->config->get('fedex_rate_type')) {
 								$total_net_charge = $shipment_rate_detail->getElementsByTagName('TotalNetCharge')->item(0);
-								
+
 								break;
 							}
 						}
@@ -194,7 +206,7 @@ class ModelShippingFedex extends Model {
 							'title'        => $title,
 							'cost'         => $this->currency->convert($cost, $currency, $this->config->get('config_currency')),
 							'tax_class_id' => $this->config->get('fedex_tax_class_id'),
-							'text'         => $this->currency->format($this->tax->calculate($this->currency->convert($cost, $currency, $this->currency->getCode()), $this->config->get('fedex_tax_class_id'), $this->config->get('config_tax')), $this->currency->getCode(), 1.0000000)
+							'text'         => $this->currency->format($this->tax->calculate($this->currency->convert($cost, $currency, $this->session->data['currency']), $this->config->get('fedex_tax_class_id'), $this->config->get('config_tax')), $this->session->data['currency'], 1.0000000)
 						);
 					}
 				}

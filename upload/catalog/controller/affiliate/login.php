@@ -4,7 +4,7 @@ class ControllerAffiliateLogin extends Controller {
 
 	public function index() {
 		if ($this->affiliate->isLogged()) {
-			$this->response->redirect($this->url->link('affiliate/account', '', 'SSL'));
+			$this->response->redirect($this->url->link('affiliate/account', '', true));
 		}
 
 		$this->load->language('affiliate/login');
@@ -28,7 +28,7 @@ class ControllerAffiliateLogin extends Controller {
 			if (isset($this->request->post['redirect']) && (strpos($this->request->post['redirect'], $this->config->get('config_url')) !== false || strpos($this->request->post['redirect'], $this->config->get('config_ssl')) !== false)) {
 				$this->response->redirect(str_replace('&amp;', '&', $this->request->post['redirect']));
 			} else {
-				$this->response->redirect($this->url->link('affiliate/account', '', 'SSL'));
+				$this->response->redirect($this->url->link('affiliate/account', '', true));
 			}
 		}
 
@@ -41,12 +41,12 @@ class ControllerAffiliateLogin extends Controller {
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_account'),
-			'href' => $this->url->link('affiliate/account', '', 'SSL')
+			'href' => $this->url->link('affiliate/account', '', true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_login'),
-			'href' => $this->url->link('affiliate/login', '', 'SSL')
+			'href' => $this->url->link('affiliate/login', '', true)
 		);
 
 		$data['heading_title'] = $this->language->get('heading_title');
@@ -70,9 +70,9 @@ class ControllerAffiliateLogin extends Controller {
 			$data['error_warning'] = '';
 		}
 
-		$data['action'] = $this->url->link('affiliate/login', '', 'SSL');
-		$data['register'] = $this->url->link('affiliate/register', '', 'SSL');
-		$data['forgotten'] = $this->url->link('affiliate/forgotten', '', 'SSL');
+		$data['action'] = $this->url->link('affiliate/login', '', true);
+		$data['register'] = $this->url->link('affiliate/register', '', true);
+		$data['forgotten'] = $this->url->link('affiliate/forgotten', '', true);
 
 		if (isset($this->request->post['redirect'])) {
 			$data['redirect'] = $this->request->post['redirect'];
@@ -111,18 +111,15 @@ class ControllerAffiliateLogin extends Controller {
 		$data['footer'] = $this->load->controller('common/footer');
 		$data['header'] = $this->load->controller('common/header');
 
-		if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/affiliate/login.tpl')) {
-			$this->response->setOutput($this->load->view($this->config->get('config_template') . '/template/affiliate/login.tpl', $data));
-		} else {
-			$this->response->setOutput($this->load->view('default/template/affiliate/login.tpl', $data));
-		}
+		$this->response->setOutput($this->load->view('affiliate/login', $data));
 	}
 
 	protected function validate() {
 		// Check how many login attempts have been made.
-		$login_info = $this->model_affiliate_affiliate->getLoginAttempts($this->request->post['email']);
+        $this->load->model('account/customer');
+		$login_info = $this->model_account_customer->getLoginAttempts($this->request->post['email']);
 				
-		if ($login_info && ($login_info['total'] > $this->config->get('config_login_attempts')) && strtotime('-1 hour') < strtotime($login_info['date_modified'])) {
+		if ($login_info && ($login_info['total'] >= $this->config->get('config_login_attempts')) && strtotime('-1 hour') < strtotime($login_info['date_modified'])) {
 			$this->error['warning'] = $this->language->get('error_attempts');
 		}		
 		
@@ -137,9 +134,9 @@ class ControllerAffiliateLogin extends Controller {
 			if (!$this->affiliate->login($this->request->post['email'], $this->request->post['password'])) {
 				$this->error['warning'] = $this->language->get('error_login');
 			
-				$this->model_affiliate_affiliate->addLoginAttempt($this->request->post['email']);
+				$this->model_account_customer->addLoginAttempt($this->request->post['email']);
 			} else {
-				$this->model_affiliate_affiliate->deleteLoginAttempts($this->request->post['email']);
+				$this->model_account_customer->deleteLoginAttempts($this->request->post['email']);
 			}
 		}
 		

@@ -16,14 +16,14 @@ class ControllerCommonDashboard extends Controller {
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('common/dashboard', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('common/dashboard', 'token=' . $this->session->data['token'], true)
 		);
-		
+
 		// Check install directory exists
 		if (is_dir(dirname(DIR_APPLICATION) . '/install')) {
 			$data['error_install'] = $this->language->get('error_install');
@@ -51,7 +51,7 @@ class ControllerCommonDashboard extends Controller {
 
 			$this->model_localisation_currency->refresh();
 		}
-			
-		$this->response->setOutput($this->load->view('common/dashboard.tpl', $data));
+
+		$this->response->setOutput($this->load->view('common/dashboard', $data));
 	}
 }

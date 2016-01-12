@@ -4,7 +4,7 @@ class ControllerDashboardChart extends Controller {
 		$this->load->language('dashboard/chart');
 
 		$data['heading_title'] = $this->language->get('heading_title');
-		
+
 		$data['text_day'] = $this->language->get('text_day');
 		$data['text_week'] = $this->language->get('text_week');
 		$data['text_month'] = $this->language->get('text_month');
@@ -13,14 +13,14 @@ class ControllerDashboardChart extends Controller {
 
 		$data['token'] = $this->session->data['token'];
 
-		return $this->load->view('dashboard/chart.tpl', $data);
+		return $this->load->view('dashboard/chart', $data);
 	}
-	
+
 	public function chart() {
 		$this->load->language('dashboard/chart');
 
 		$json = array();
-		
+
 		$this->load->model('report/sale');
 		$this->load->model('report/customer');
 
@@ -64,7 +64,7 @@ class ControllerDashboardChart extends Controller {
 				foreach ($results as $key => $value) {
 					$json['order']['data'][] = array($key, $value['total']);
 				}
-				
+
 				$results = $this->model_report_customer->getTotalCustomersByWeek();
 
 				foreach ($results as $key => $value) {

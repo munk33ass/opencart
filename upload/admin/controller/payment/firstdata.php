@@ -14,11 +14,11 @@ class ControllerPaymentFirstdata extends Controller {
 
 			$this->session->data['success'] = $this->language->get('text_success');
 
-			$this->response->redirect($this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL'));
+			$this->response->redirect($this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true));
 		}
 
 		$data['heading_title'] = $this->language->get('heading_title');
-		
+
 		$data['text_edit'] = $this->language->get('text_edit');
 		$data['text_enabled'] = $this->language->get('text_enabled');
 		$data['text_disabled'] = $this->language->get('text_disabled');
@@ -69,7 +69,7 @@ class ControllerPaymentFirstdata extends Controller {
 
 		$data['button_save'] = $this->language->get('button_save');
 		$data['button_cancel'] = $this->language->get('button_cancel');
-		
+
 		$data['notify_url'] = HTTPS_CATALOG . 'index.php?route=payment/firstdata/notify';
 
 		$this->load->model('localisation/order_status');
@@ -114,21 +114,21 @@ class ControllerPaymentFirstdata extends Controller {
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('common/dashboard', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_payment'),
-			'href' => $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('payment/firstdata', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('payment/firstdata', 'token=' . $this->session->data['token'], true)
 		);
 
-		$data['action'] = $this->url->link('payment/firstdata', 'token=' . $this->session->data['token'], 'SSL');
-		$data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL');
+		$data['action'] = $this->url->ssl('payment/firstdata', 'token=' . $this->session->data['token'], true);
+		$data['cancel'] = $this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true);
 
 		if (isset($this->request->post['firstdata_merchant_id'])) {
 			$data['firstdata_merchant_id'] = $this->request->post['firstdata_merchant_id'];
@@ -240,10 +240,20 @@ class ControllerPaymentFirstdata extends Controller {
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
-		$this->response->setOutput($this->load->view('payment/firstdata.tpl', $data));
+		$this->response->setOutput($this->load->view('payment/firstdata', $data));
 	}
 
-	public function orderAction() {
+	public function install() {
+		$this->load->model('payment/firstdata');
+		$this->model_payment_firstdata->install();
+	}
+
+	public function uninstall() {
+		$this->load->model('payment/firstdata');
+		$this->model_payment_firstdata->uninstall();
+	}
+
+	public function order() {
 		if ($this->config->get('firstdata_status')) {
 			$this->load->model('payment/firstdata');
 
@@ -265,8 +275,8 @@ class ControllerPaymentFirstdata extends Controller {
 
 				$data['hash'] = sha1(bin2hex($data['merchant_id'] . $data['request_timestamp'] . $data['amount'] . $data['currency'] . $this->config->get('firstdata_secret')));
 
-				$data['void_url'] = $this->url->link('payment/firstdata/void', 'token=' . $this->session->data['token'], 'SSL');
-				$data['capture_url'] = $this->url->link('payment/firstdata/capture', 'token=' . $this->session->data['token'], 'SSL');
+				$data['void_url'] = $this->url->ssl('payment/firstdata/void', 'token=' . $this->session->data['token'], true);
+				$data['capture_url'] = $this->url->ssl('payment/firstdata/capture', 'token=' . $this->session->data['token'], true);
 				$data['notify_url'] = HTTPS_CATALOG . 'index.php?route=payment/firstdata/notify';
 
 				if ($this->config->get('firstdata_live_demo') == 1) {
@@ -327,7 +337,7 @@ class ControllerPaymentFirstdata extends Controller {
 				$data['order_id'] = $this->request->get['order_id'];
 				$data['token'] = $this->request->get['token'];
 
-				return $this->load->view('payment/firstdata_order.tpl', $data);
+				return $this->load->view('payment/firstdata_order', $data);
 			}
 		}
 	}
@@ -347,7 +357,7 @@ class ControllerPaymentFirstdata extends Controller {
 			$this->session->data['void_success'] = $this->language->get('success_void');
 		}
 
-		$this->response->redirect($this->url->link('sale/order/info', 'order_id=' . $this->request->post['order_id'] . '&token=' . $this->session->data['token'], 'SSL'));
+		$this->response->redirect($this->url->ssl('sale/order/info', 'order_id=' . $this->request->post['order_id'] . '&token=' . $this->session->data['token'], true));
 	}
 
 	public function capture() {
@@ -365,7 +375,7 @@ class ControllerPaymentFirstdata extends Controller {
 			$this->session->data['capture_success'] = $this->language->get('success_capture');
 		}
 
-		$this->response->redirect($this->url->link('sale/order/info', 'order_id=' . $this->request->post['order_id'] . '&token=' . $this->session->data['token'], 'SSL'));
+		$this->response->redirect($this->url->ssl('sale/order/info', 'order_id=' . $this->request->post['order_id'] . '&token=' . $this->session->data['token'], true));
 	}
 
 	protected function validate() {

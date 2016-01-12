@@ -1,79 +1,183 @@
 <?php
 final class Loader {
-	private $registry;
+	protected $registry;
 
 	public function __construct($registry) {
 		$this->registry = $registry;
 	}
-
-	public function controller($route, $args = array()) {
-		$action = new Action($route, $args);
-
-		return $action->execute($this->registry);
+	
+	public function controller($route, $data = array()) {
+		// Sanitize the call
+		$route = str_replace('../', '', (string)$route);
+		
+		// Trigger the pre events
+		$result = $this->registry->get('event')->trigger('controller/' . $route . '/before', array(&$route, &$data));
+		
+		if ($result) {
+			return $result;
+		}
+		
+		$action = new Action($route);
+		$output = $action->execute($this->registry, array(&$data));
+			
+		// Trigger the post events
+		$result = $this->registry->get('event')->trigger('controller/' . $route . '/after', array(&$route, &$data, &$output));
+		
+		if ($result) {
+			return $result;
+		}
+		
+		return $output;
 	}
+	
+	public function model($route) {
+		// Sanitize the call
+		$route = str_replace('../', '', (string)$route);
+		
+		$file  = DIR_APPLICATION . 'model/' . $route . '.php';
+		$class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $route);
 
-	public function model($model) {
-		$file = DIR_APPLICATION . 'model/' . $model . '.php';
-		$class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $model);
-
-		if (file_exists($file)) {
+		if (is_file($file)) {
 			include_once($file);
+			//echo $class;
+			$proxy = new Proxy();
 
-			$this->registry->set('model_' . str_replace('/', '_', $model), new $class($this->registry));
+			foreach (get_class_methods($class) as $method) {
+				$proxy->attach($method, $this->callback($this->registry, $route . '/' . $method));
+			}
+
+			$this->registry->set('model_' . str_replace(array('/', '-', '.'), array('_', '', ''), (string)$route), $proxy);
 		} else {
-			trigger_error('Error: Could not load model ' . $file . '!');
-			exit();
+			throw new \Exception('Error: Could not load model ' . $route . '!');
 		}
 	}
 
-	public function view($template, $data = array()) {
-		$file = DIR_TEMPLATE . $template;
+	public function view($route, $data = array()) {
+		// Sanitize the call
+		$route = str_replace('../', '', (string)$route);
+		
+		// Trigger the pre events
+		$result = $this->registry->get('event')->trigger('view/' . $route . '/before', array(&$route, &$data));
+		
+		if ($result) {
+			return $result;
+		}
+		
+		$template = new Template('basic');
+		
+		foreach ($data as $key => $value) {
+			$template->set($key, $value);
+		}
+		
+		$output = $template->render($route . '.tpl');
+		
+		// Trigger the post e
+		$result = $this->registry->get('event')->trigger('view/' . $route . '/after', array(&$route, &$data, &$output));
+		
+		if ($result) {
+			return $result;
+		}
+		
+		return $output;
+	}
 
-		if (file_exists($file)) {
-			extract($data);
+	public function library($route) {
+		// Sanitize the call
+		$route = str_replace('../', '', (string)$route);
+			
+		$file = DIR_SYSTEM . 'library/' . $route . '.php';
+		$class = str_replace('/', '\\', $route);
 
-			ob_start();
+		if (is_file($file)) {
+			include_once($file);
 
-			require($file);
+			$this->registry->set(basename($route), new $class($this->registry));
+		} else {
+			throw new \Exception('Error: Could not load library ' . $route . '!');
+		}
+	}
+	
+	public function helper($route) {
+		$file = DIR_SYSTEM . 'helper/' . str_replace('../', '', (string)$route) . '.php';
 
-			$output = ob_get_contents();
+		if (is_file($file)) {
+			include_once($file);
+		} else {
+			throw new \Exception('Error: Could not load helper ' . $route . '!');
+		}
+	}
+	
+	public function config($route) {
+		$this->registry->get('event')->trigger('config/' . $route . '/before', $route);
+		
+		$this->registry->get('config')->load($route);
+		
+		$this->registry->get('event')->trigger('config/' . $route . '/after', $route);
+	}
 
-			ob_end_clean();
-
+	public function language($route) {
+		$this->registry->get('event')->trigger('language/' . $route . '/before', $route);
+		
+		$this->registry->get('language')->load($route);
+		
+		$this->registry->get('event')->trigger('language/' . $route . '/after', $route);
+	}
+	
+	protected function callback($registry, $route) {
+		return function($args) use($registry, &$route) {
+			// Trigger the pre events
+			$result = $registry->get('event')->trigger('model/' . $route . '/before', array_merge(array(&$route), $args));
+			
+			if ($result) {
+				return $result;
+			}
+			
+			$file = DIR_APPLICATION . 'model/' .  substr($route, 0, strrpos($route, '/')) . '.php';
+			$class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', substr($route, 0, strrpos($route, '/')));
+			$method = substr($route, strrpos($route, '/') + 1);
+	
+			if (is_file($file)) {
+				include_once($file);
+			
+				$model = new $class($registry);
+			} else {
+				throw new \Exception('Error: Could not load model ' . substr($route, 0, strrpos($route, '/')) . '!');
+			}
+			
+			if (method_exists($model, $method)) {
+				$output = call_user_func_array(array($model, $method), $args);
+			} else {
+				throw new \Exception('Error: Could not call model/' . $route . '!');
+			}
+			
+			if ($route == 'checkout/order/addOrderHistory') {
+				//$registry->get('log')->write('hi');
+				
+				//$test = array();
+				
+				//$test[] = &$route;
+				
+				//$test = array_merge($test, $args);
+				
+				//$test[] = &$output;
+				
+				//$registry->get('log')->write('after');
+				//$registry->get('log')->write($test);
+			}
+													
+			// Trigger the post events
+			$result = $registry->get('event')->trigger('model/' . $route . '/after', array_merge(array(&$route), $args, array(&$output)));
+			
+			if ($result) {
+				return $result;
+			}
+			
+			if ($route == 'checkout/order/addOrderHistory') {
+				//$registry->get('log')->write('hi');
+				$registry->get('log')->write(array_merge(array(&$route), $args, array(&$output)));
+			}
+						
 			return $output;
-		} else {
-			trigger_error('Error: Could not load template ' . $file . '!');
-			exit();
-		}
-	}
-
-	public function library($library) {
-		$file = DIR_SYSTEM . 'library/' . $library . '.php';
-
-		if (file_exists($file)) {
-			include_once($file);
-		} else {
-			trigger_error('Error: Could not load library ' . $file . '!');
-			exit();
-		}
-	}
-
-	public function helper($helper) {
-		$file = DIR_SYSTEM . 'helper/' . $helper . '.php';
-
-		if (file_exists($file)) {
-			include_once($file);
-		} else {
-			trigger_error('Error: Could not load helper ' . $file . '!');
-			exit();
-		}
-	}
-
-	public function config($config) {
-		$this->registry->get('config')->load($config);
-	}
-
-	public function language($language) {
-		return $this->registry->get('language')->load($language);
-	}
+		};
+	}	
 }

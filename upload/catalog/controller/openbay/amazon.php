@@ -8,7 +8,7 @@ class ControllerOpenbayAmazon extends Controller {
 		$this->load->library('log');
 		$this->load->model('checkout/order');
 		$this->load->model('openbay/amazon_order');
-		$this->language->load('openbay/amazon_order');
+		$this->load->language('openbay/amazon_order');
 
 		$logger = new Log('amazon.log');
 		$logger->write('amazon/order - started');
@@ -318,7 +318,7 @@ class ControllerOpenbayAmazon extends Controller {
 		}
 
 		$this->load->library('log');
-		$this->load->library('amazon');
+		$this->load->library('openbay/amazon');
 		$this->load->model('openbay/amazon_listing');
 		$this->load->model('openbay/amazon_product');
 
@@ -416,7 +416,7 @@ class ControllerOpenbayAmazon extends Controller {
 
 		ob_start();
 
-		$this->load->library('amazon');
+		$this->load->library('openbay/amazon');
 		$this->load->model('openbay/amazon_product');
 		$this->load->library('log');
 		$logger = new Log('amazon_product.log');
@@ -577,7 +577,11 @@ class ControllerOpenbayAmazon extends Controller {
 		}
 	}
 
-	public function eventAddOrder($order_id) {
-		$this->openbay->amazon->addOrder($order_id);
+	public function eventAddOrderHistory($order_id) {
+		if (!empty($order_id)) {
+			$this->load->model('openbay/amazon_order');
+
+			$this->model_openbay_amazon_order->addOrderHistory($order_id);
+		}
 	}
 }

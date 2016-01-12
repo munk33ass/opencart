@@ -19,13 +19,13 @@ class ControllerCommonProfile extends Controller {
 			if (is_file(DIR_IMAGE . $user_info['image'])) {
 				$data['image'] = $this->model_tool_image->resize($user_info['image'], 45, 45);
 			} else {
-				$data['image'] = $this->model_tool_image->resize('no_image.png', 45, 45);
+				$data['image'] = '';
 			}
 		} else {
 			$data['username'] = '';
 			$data['image'] = '';
 		}
 
-		return $this->load->view('common/profile.tpl', $data);
+		return $this->load->view('common/profile', $data);
 	}
 }

@@ -1,9 +1,6 @@
 <?php
-
 class ControllerPaymentSecureTradingWs extends Controller {
-
 	private $error = array();
-
 
 	public function index() {
 		$this->load->model('setting/setting');
@@ -20,7 +17,7 @@ class ControllerPaymentSecureTradingWs extends Controller {
 
 			$this->session->data['success'] = $this->language->get('text_success');
 
-			$this->response->redirect($this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL'));
+			$this->response->redirect($this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true));
 		}
 
 		if (isset($this->request->post['securetrading_ws_site_reference'])) {
@@ -240,17 +237,17 @@ class ControllerPaymentSecureTradingWs extends Controller {
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('common/dashboard', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_payment'),
-			'href' => $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('payment/securetrading_ws', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('payment/securetrading_ws', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();
@@ -276,9 +273,9 @@ class ControllerPaymentSecureTradingWs extends Controller {
 			'100' => $this->language->get('text_pending_settled'),
 		);
 
-		$data['action'] = $this->url->link('payment/securetrading_ws', 'token=' . $this->session->data['token'], 'SSL');
+		$data['action'] = $this->url->ssl('payment/securetrading_ws', 'token=' . $this->session->data['token'], true);
 
-		$data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token']);
+		$data['cancel'] = $this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true);
 
 		$data['myst_status'] = !empty($data['securetrading_ws_csv_username']) && !empty($data['securetrading_ws_csv_password']);
 		$data['hours'] = array();
@@ -301,7 +298,7 @@ class ControllerPaymentSecureTradingWs extends Controller {
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
-		$this->response->setOutput($this->load->view('payment/securetrading_ws.tpl', $data));
+		$this->response->setOutput($this->load->view('payment/securetrading_ws', $data));
 	}
 
 	public function install() {
@@ -389,7 +386,7 @@ class ControllerPaymentSecureTradingWs extends Controller {
 			foreach ($csv as $row) {
 				$data['transactions'][] = array(
 					'order_id' => $row['orderreference'],
-					'order_href' => $this->url->link('sale/order/info', 'token=' . $this->session->data['token'] . '&order_id=' . $row['orderreference'], 'SSL'),
+					'order_href' => $this->url->ssl('sale/order/info', 'token=' . $this->session->data['token'] . '&order_id=' . $row['orderreference'], true),
 					'transaction_reference' => $row['transactionreference'],
 					'customer' => $row['billingfirstname'] . ' ' . $row['billinglastname'],
 					'total' => $row['mainamount'],
@@ -402,12 +399,10 @@ class ControllerPaymentSecureTradingWs extends Controller {
 			}
 		}
 
-		$this->template = 'payment/securetrading_ws_transactions.tpl';
-
-		$this->response->setOutput($this->render());
+		return $this->load->view('payment/securetrading_ws_transactions', $data);
 	}
 
-	public function orderAction() {
+	public function order() {
 
 		if ($this->config->get('securetrading_ws_status')) {
 			$this->load->model('payment/securetrading_ws');
@@ -439,19 +434,17 @@ class ControllerPaymentSecureTradingWs extends Controller {
 				$data['text_column_amount'] = $this->language->get('text_column_amount');
 				$data['text_column_type'] = $this->language->get('text_column_type');
 				$data['text_column_created'] = $this->language->get('text_column_created');
-				$data['btn_release'] = $this->language->get('btn_release');
-				$data['btn_rebate'] = $this->language->get('btn_rebate');
-				$data['btn_void'] = $this->language->get('btn_void');
+				$data['button_release'] = $this->language->get('button_release');
+				$data['button_rebate'] = $this->language->get('button_rebate');
+				$data['button_void'] = $this->language->get('button_void');
 				$data['text_confirm_void'] = $this->language->get('text_confirm_void');
 				$data['text_confirm_release'] = $this->language->get('text_confirm_release');
 				$data['text_confirm_rebate'] = $this->language->get('text_confirm_rebate');
 
 				$data['order_id'] = $this->request->get['order_id'];
 				$data['token'] = $this->request->get['token'];
-
-				$this->template = 'payment/securetrading_ws_order.tpl';
-
-				$this->response->setOutput($this->render());
+				
+				return $this->load->view('payment/securetrading_ws_order', $data);
 			}
 		}
 	}
@@ -469,7 +462,7 @@ class ControllerPaymentSecureTradingWs extends Controller {
 
 			$this->model_payment_securetrading_ws->logger('Void result:\r\n' . print_r($void_response, 1));
 
-			if ($void_response !== False) {
+			if ($void_response !== false) {
 				$response_xml = simplexml_load_string($void_response);
 
 				if ($response_xml->response['type'] == 'ERROR' || (string)$response_xml->response->error->code != '0') {
@@ -482,7 +475,7 @@ class ControllerPaymentSecureTradingWs extends Controller {
 
 					$this->data = array(
 						'order_status_id' => $this->config->get('securetrading_ws_authorisation_reversed_order_status_id'),
-						'notify' => False,
+						'notify' => false,
 						'comment' => '',
 					);
 
@@ -521,7 +514,7 @@ class ControllerPaymentSecureTradingWs extends Controller {
 
 			$this->model_payment_securetrading_ws->logger('Release result:\r\n' . print_r($release_response, 1));
 
-			if ($release_response !== False) {
+			if ($release_response !== false) {
 				$response_xml = simplexml_load_string($release_response);
 
 				if ($response_xml->response['type'] == 'ERROR' || (string)$response_xml->response->error->code != '0') {
@@ -584,7 +577,7 @@ class ControllerPaymentSecureTradingWs extends Controller {
 
 			$this->model_payment_securetrading_ws->logger('Rebate result:\r\n' . print_r($rebate_response, 1));
 
-			if ($rebate_response !== False) {
+			if ($rebate_response !== false) {
 				$response_xml = simplexml_load_string($rebate_response);
 
 				$error_code = (string)$response_xml->response->error->code;
@@ -599,7 +592,6 @@ class ControllerPaymentSecureTradingWs extends Controller {
 					if ($total_released <= 0 && $securetrading_ws_order['release_status'] == 1) {
 						$json['status'] = 1;
 						$json['message'] = $this->language->get('text_refund_issued');
-
 
 						$this->model_payment_securetrading_ws->updateRebateStatus($securetrading_ws_order['securetrading_ws_order_id'], 1);
 						$rebate_status = 1;
@@ -664,30 +656,4 @@ class ControllerPaymentSecureTradingWs extends Controller {
 
 		return !$this->error;
 	}
-
-//	protected function validate() {
-//		$this->load->model('localisation/currency');
-//
-//		if (!$this->user->hasPermission('modify', 'payment/securetrading_ws')) {
-//			$this->errors[] = $this->language->get('error_permission');
-//		}
-//
-//		if (empty($this->request->post['securetrading_ws_site_reference'])) {
-//			$this->errors[] = $this->language->get('error_site_reference');
-//		}
-//
-//		if (empty($this->request->post['securetrading_ws_username'])) {
-//			$this->errors[] = $this->language->get('error_username');
-//		}
-//
-//		if (empty($this->request->post['securetrading_ws_password'])) {
-//			$this->errors[] = $this->language->get('error_password');
-//		}
-//
-//		if (empty($this->request->post['securetrading_ws_cards_accepted'])) {
-//			$this->errors[] = $this->language->get('error_cards_accepted');
-//		}
-//
-//		return empty($this->errors);
-//	}
 }

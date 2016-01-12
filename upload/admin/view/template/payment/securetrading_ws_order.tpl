@@ -1,6 +1,6 @@
 <h2><?php echo $text_payment_info; ?></h2>
 <div class="success" id="securetrading_ws_transaction_msg" style="display:none;"></div>
-<table class="form">
+<table class="table table-bordered">
 	<tr>
 		<td><?php echo $text_order_ref; ?></td>
 		<td><?php echo $securetrading_ws_order['transaction_reference']; ?></td>
@@ -22,7 +22,7 @@
 				<span class="release_text"><?php echo $text_no; ?></span>&nbsp;&nbsp;
 				<?php if ($securetrading_ws_order['void_status'] == 0) { ?>
 					<input type="text" width="10" id="release_amount" value="<?php echo $securetrading_ws_order['total']; ?>"/>
-					<a class="button btn btn-primary" id="btn_release"><?php echo $btn_release; ?></a>
+					<a class="button btn btn-primary" id="btn_release"><?php echo $button_release; ?></a>
 					<span class="btn btn-primary" id="img_loading_release" style="display:none;"><i class="fa fa-cog fa-spin fa-lg"></i></span>
 				<?php } ?>
 			<?php } ?>
@@ -35,7 +35,7 @@
 				<span class="void_text"><?php echo $text_yes; ?></span>
 			<?php } elseif ($securetrading_ws_order['void_status'] == 0 && $securetrading_ws_order['release_status'] != 1 && $securetrading_ws_order['rebate_status'] != 1) { ?>
 				<span class="void_text"><?php echo $text_no; ?></span>&nbsp;&nbsp;
-				<a class="button btn btn-primary" id="btn_void"><?php echo $btn_void; ?></a>
+				<a class="button btn btn-primary" id="btn_void"><?php echo $button_void; ?></a>
 				<span class="btn btn-primary" id="img_loading_void" style="display:none;"><i class="fa fa-cog fa-spin fa-lg"></i></span>
 			<?php } else { ?>
 				<span class="void_text"><?php echo $text_no; ?></span>
@@ -52,7 +52,7 @@
 
 				<?php if ($securetrading_ws_order['total_released'] > 0 && $securetrading_ws_order['void_status'] == 0) { ?>
 					<input type="text" width="10" id="rebate_amount" />
-					<a class="button btn btn-primary" id="btn_rebate"><?php echo $btn_rebate; ?></a>
+					<a class="button btn btn-primary" id="btn_rebate"><?php echo $button_rebate; ?></a>
 					<span class="btn btn-primary" id="img_loading_rebate" style="display:none;"><i class="fa fa-cog fa-spin fa-lg"></i></span>
 				<?php } ?>
 			<?php } ?>
@@ -61,7 +61,7 @@
 	<tr>
 		<td><?php echo $text_transactions; ?>:</td>
 		<td>
-			<table class="list" id="securetrading_ws_transactions">
+			<table class="table table-bordered" id="securetrading_ws_transactions">
 				<thead>
 					<tr>
 						<td class="text-left"><strong><?php echo $text_column_created; ?></strong></td>

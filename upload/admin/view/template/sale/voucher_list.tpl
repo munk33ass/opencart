@@ -91,7 +91,11 @@
                   <td class="text-left"><?php echo $voucher['theme']; ?></td>
                   <td class="text-left"><?php echo $voucher['status']; ?></td>
                   <td class="text-left"><?php echo $voucher['date_added']; ?></td>
-                  <td class="text-right"><a href="<?php echo $voucher['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
+                  <td class="text-right">
+                  <?php if ($voucher['order']) { ?>
+                  <a href="<?php echo $voucher['order']; ?>" data-toggle="tooltip" title="<?php echo $button_order; ?>" class="btn btn-info"><i class="fa fa fa-eye"></i></a>
+                  <?php } ?>
+                  <a href="<?php echo $voucher['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
                 </tr>
                 <?php } ?>
                 <?php } else { ?>
@@ -116,7 +120,7 @@ $('#button-send').on('click', function() {
 		url: 'index.php?route=sale/voucher/send&token=<?php echo $token; ?>',
 		type: 'post',
 		dataType: 'json',
-		data: $('input[name^=\'selected\']'),
+		data: $('input[name^=\'selected\']:checked'),
 		beforeSend: function() {
 			$('#button-send i').replaceWith('<i class="fa fa-circle-o-notch fa-spin"></i>');
 			$('#button-send').prop('disabled', true);

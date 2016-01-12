@@ -14,11 +14,11 @@ class ControllerPaymentRealex extends Controller {
 
 			$this->session->data['success'] = $this->language->get('text_success');
 
-			$this->response->redirect($this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL'));
+			$this->response->redirect($this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true));
 		}
 
 		$data['heading_title'] = $this->language->get('heading_title');
-		
+
 		$data['text_edit'] = $this->language->get('text_edit');
 		$data['text_enabled'] = $this->language->get('text_enabled');
 		$data['text_disabled'] = $this->language->get('text_disabled');
@@ -85,7 +85,7 @@ class ControllerPaymentRealex extends Controller {
 		$data['button_cancel'] = $this->language->get('button_cancel');
 
 		$data['error_use_select_card'] = $this->language->get('error_use_select_card');
-		
+
 		$data['notify_url'] = HTTPS_CATALOG . 'index.php?route=payment/realex/notify';
 
 		if (isset($this->error['warning'])) {
@@ -122,21 +122,21 @@ class ControllerPaymentRealex extends Controller {
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_home'),
-			'href' => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('common/dashboard', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_payment'),
-			'href' => $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('payment/realex', 'token=' . $this->session->data['token'], 'SSL')
+			'href' => $this->url->ssl('payment/realex', 'token=' . $this->session->data['token'], true)
 		);
 
-		$data['action'] = $this->url->link('payment/realex', 'token=' . $this->session->data['token'], 'SSL');
-		$data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL');
+		$data['action'] = $this->url->ssl('payment/realex', 'token=' . $this->session->data['token'], true);
+		$data['cancel'] = $this->url->ssl('extension/payment', 'token=' . $this->session->data['token'], true);
 
 		if (isset($this->request->post['realex_merchant_id'])) {
 			$data['realex_merchant_id'] = $this->request->post['realex_merchant_id'];
@@ -167,7 +167,7 @@ class ControllerPaymentRealex extends Controller {
 		} else {
 			$data['realex_geo_zone_id'] = $this->config->get('realex_geo_zone_id');
 		}
-		
+
 		$this->load->model('localisation/geo_zone');
 
 		$data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();
@@ -284,16 +284,16 @@ class ControllerPaymentRealex extends Controller {
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
-		$this->response->setOutput($this->load->view('payment/realex.tpl', $data));
+		$this->response->setOutput($this->load->view('payment/realex', $data));
 	}
 
 	public function install() {
 		$this->load->model('payment/realex');
-		
+
 		$this->model_payment_realex->install();
 	}
 
-	public function orderAction() {
+	public function order() {
 		if ($this->config->get('realex_status')) {
 			$this->load->model('payment/realex');
 
@@ -334,7 +334,7 @@ class ControllerPaymentRealex extends Controller {
 				$data['order_id'] = $this->request->get['order_id'];
 				$data['token'] = $this->request->get['token'];
 
-				return $this->load->view('payment/realex_order.tpl', $data);
+				return $this->load->view('payment/realex_order', $data);
 			}
 		}
 	}

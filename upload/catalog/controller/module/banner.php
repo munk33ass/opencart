@@ -5,11 +5,11 @@ class ControllerModuleBanner extends Controller {
 
 		$this->load->model('design/banner');
 		$this->load->model('tool/image');
-		
+
 		$this->document->addStyle('catalog/view/javascript/jquery/owl-carousel/owl.carousel.css');
 		$this->document->addStyle('catalog/view/javascript/jquery/owl-carousel/owl.transitions.css');
 		$this->document->addScript('catalog/view/javascript/jquery/owl-carousel/owl.carousel.min.js');
-				
+
 		$data['banners'] = array();
 
 		$results = $this->model_design_banner->getBanner($setting['banner_id']);
@@ -26,10 +26,6 @@ class ControllerModuleBanner extends Controller {
 
 		$data['module'] = $module++;
 
-		if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/module/banner.tpl')) {
-			return $this->load->view($this->config->get('config_template') . '/template/module/banner.tpl', $data);
-		} else {
-			return $this->load->view('default/template/module/banner.tpl', $data);
-		}
+		return $this->load->view('module/banner', $data);
 	}
 }
